@@ -40,37 +40,29 @@ var _viewport_prototype = {
 var _config_prototype = {
     selfPointer: NULL,
     /**
-     * Checks the value of MENSAJE_MOMENTANEO variable
+     * Gets the value of MENSAJE_MOMENTANEO variable
      */
-    isMomentaryMessageVisible:   new NativeGetter('0xB0', 'uint8'),
+    getIsMomentaryMessageVisible:   new NativeGetter('0xB0', 'uint8'),
     /**
-     * Changes the value of MENSAJE_MOMENTANEO variable
+     * Sets the value of MENSAJE_MOMENTANEO variable
      */
-    setMomentaryMessageVisible:  new NativeSetter('0xB0', 'uint8')
+    setIsMomentaryMessageVisible:   new NativeSetter('0xB0', 'uint8'),
+    /**
+     * Gets the value of FRAMEADO_ADAPTATIVO variable
+     */
+    getIsAdaptiveFrameRate:         new NativeGetter('0x6B', 'uint8'),
+    /**
+     * Sets the value of FRAMEADO_ADAPTATIVO variable
+     */
+    setIsAdaptiveFrameRate:         new NativeGetter('0x6B', 'uint8'),
 }
 
-/**
- * Object sent to sub_4DE1F0 to get list of the items
- */
-var _unknown001_prototype = {
-        getProp000:     new NativeGetter('0x00', 'uint8'),
-        setProp000:     new NativeSetter('0x00', 'uint8'),
-        getProp002:     new NativeGetter('0x02', 'uint8'),
-        setProp002:     new NativeSetter('0x02', 'uint8'),
-        getProp003:     new NativeGetter('0x03', 'uint8'),
-        setProp003:     new NativeSetter('0x03', 'uint8'),
-        getProp004:     new NativeGetter('0x04', 'uint8'),
-        setProp004:     new NativeSetter('0x04', 'uint8'),
-        getProp010:     new NativeGetter('0x10', 'pointer'),
-        setProp010:     new NativeSetter('0x10', 'pointer'),
-        getProp00C:     new NativeGetter('0x0C', 'uint8'),
-        setProp00C:     new NativeSetter('0x0C', 'uint8'),
+var _actor_prototype = {
+    getActorName:   new NativeGetter('0x10', 'string'),
+    setActorName:   new NativeSetter('0x10', 'string')
 }
 
-function Unknown001(address) {
-    if (address.isNull || (address === undefined)) {
-        address = Memory.alloc(0x14);
-    }
+function Actor(address) {
     this.selfPointer = address;
 }
 
@@ -89,7 +81,7 @@ function Config(address) {
 Game.prototype = _game_prototype;
 Viewport.prototype = _viewport_prototype;
 Config.prototype = _config_prototype;
-Unknown001.prototype = _unknown001_prototype;
+Actor.prototype = _actor_prototype;
 
 ///// Enums /////////////////
 
@@ -131,16 +123,63 @@ var c2 = {
         return new Game(c2.ffi.game_getCurrentGamePointer());
     },
     getConfig: function() {
-        return new Config(c2.ffi.global_getUnknown001Pointer())
+        return new Config(c2.ffi.global_getConfigPointer())
     },
-    _getActorList: function() {
-        var obj = new Unknown001(NULL);
-        c2.ffi.initializeUnknown001(obj.selfPointer);
-        var p = c2.ffi.getParameterForGetActorList();
-        c2.ffi.getActorList(obj.selfPointer, p, 1);
+    getActorList: function() {
+        var actors = []; 
         
-        // Now "obj.getProp010()" contains an address
-        // We should be able to use it to get the list of actors 
+        function Container(address) {
+            if (address.isNull || (address === undefined)) {
+                address = Memory.alloc(0x14);
+            }
+            this.selfPointer = address;
+        }
+        
+        /**
+         * Object sent to sub_4DE1F0 to get list of the items
+         */
+        Container.prototype = {
+            selfPointer:        NULL,
+            getProp000:         new NativeGetter('0x00', 'uint8'),
+            setProp000:         new NativeSetter('0x00', 'uint8'),
+            getProp002:         new NativeGetter('0x02', 'uint8'),
+            setProp002:         new NativeSetter('0x02', 'uint8'),
+            getProp003:         new NativeGetter('0x03', 'uint8'),
+            setProp003:         new NativeSetter('0x03', 'uint8'),
+            getProp004:         new NativeGetter('0x04', 'uint8'),
+            setProp004:         new NativeSetter('0x04', 'uint8'),
+            getIsEmpty:         new NativeGetter('0x09', 'uint8'),
+            setIsEmpty:         new NativeSetter('0x09', 'uint8'),
+            getFirstPointer:    new NativeGetter('0x10', 'pointer'),
+            setFirstPointer:    new NativeSetter('0x10', 'pointer'),
+            getLastPointer:     new NativeGetter('0x0C', 'pointer'),
+            setLastPointer:     new NativeSetter('0x0C', 'pointer'),
+        }
+        
+        function LinkedListItem(address) {
+            this.selfPointer = address;
+            if (!address.isNull()) {
+                this.nextPointer = Memory.readPointer(address.add(0x04));
+                this.actorPointer = Memory.readPointer(address.add(0x08));
+            }
+        }
+        
+        var container = new Container(NULL);
+        c2.ffi.initializeActorLinkedListContainer(container.selfPointer);
+        
+        var param = c2.ffi.getParameterForGetActorList();
+        c2.ffi.getActorList(container.selfPointer, param, 1);
+        
+        if (!container.getIsEmpty()) {
+            var currentItem = new LinkedListItem(container.getFirstPointer());
+            while (!currentItem.selfPointer.equals(container.getLastPointer())) {
+                var actor = new Actor(currentItem.actorPointer);
+                actors.push(actor);
+                currentItem = new LinkedListItem(currentItem.nextPointer);
+            }
+        }
+        
+        return actors;
     }
 };
 
@@ -148,7 +187,9 @@ var c2 = {
 
 c2.ffi = {
     global_getCurrentGamePointer:       function() { return Memory.readPointer(ptr('0x00B5A650')); },
-    global_getUnknown001Pointer:        function() { return Memory.readPointer(ptr('0x00B58490')); },
+    global_getConfigPointer:            function() { return Memory.readPointer(ptr('0x00B58490')); },
+    global_getScene:                    function() { return Memory.readPointer(ptr('0x00B58488')); },
+    global_getUnknown_00B64A28:         function() { return Memory.readPointer(ptr('0x00B64A28')); },
     game_getCurrentViewportPointer:     new NativeFunction(ptr('0x008ED2C0'), 'pointer', ['pointer'], 'thiscall'),
     game_toggleDebugOverlay:            new NativeFunction(ptr('0x0051CF20'), 'int', ['pointer', 'int'], 'thiscall'),
     game_showDebugOverlay:              new NativeFunction(ptr('0x0051CC10'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
@@ -162,7 +203,8 @@ c2.ffi = {
     openVariablesGeneralesWindow:       new NativeFunction(ptr('0x008ED950'), 'int', ['pointer'], 'thiscall'),
     openDeveloperWindow:                new NativeFunction(ptr('0x0060F200'), 'int', ['pointer'], 'thiscall'),
     getActorList:                       new NativeFunction(ptr('0x004DE1F0'), 'int', ['pointer', 'pointer', 'int'], 'thiscall'),
-    initializeUnknown001:               new NativeFunction(ptr('0x00472820'), 'int', ['pointer'], 'thiscall'),
+    initializeActorLinkedListContainer: new NativeFunction(ptr('0x00472820'), 'int', ['pointer'], 'thiscall'),
+    // TODO: this function should be replaced with an object reference  
     getParameterForGetActorList:        new NativeFunction(ptr('0x004EDFF0'), 'pointer', [], 'thiscall')
 };
 
@@ -221,3 +263,13 @@ function NativeSetter(offset, type) {
         return setter(this.selfPointer.add(offset), value);
     }
 }
+
+///// Hooks /////////////////
+// Interceptor.attach(ptr('0x005189A0'), {
+//     onEnter: function(args) {
+//     }
+// });
+// Interceptor.attach(ptr('0x00574150'), {
+//     onEnter: function(args) {
+//     }
+// });
