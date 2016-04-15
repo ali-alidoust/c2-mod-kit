@@ -18,23 +18,23 @@ var _game_prototype = {
 };
 
 var _viewport_prototype = {
-	selfPointer: NULL,
+    selfPointer: NULL,
     
     /**
      * Enables debug render options
-     * @param {Number} - debugRenderOptionId one of DebugRenderOptionEnum values
+     * @param {Number} - debugRenderOptionId - one of DebugRenderOptionEnum values
      * @param {Number} - unknown
      */
-	enableDebugRenderOption: function(debugRenderOptionId, unknown) {
-		return c2.ffi.viewport_enableDebugRenderOption(this.selfPointer , debugRenderOptionId, unknown);
-	},
+    enableDebugRenderOption: function(debugRenderOptionId, unknown) {
+        return c2.ffi.viewport_enableDebugRenderOption(this.selfPointer , debugRenderOptionId, unknown);
+    },
     /**
      * Disables debug render options
-     * @param {Number} - debugRenderOptionId one of DebugRenderOptionEnum values
+     * @param {Number} - debugRenderOptionId - one of DebugRenderOptionEnum values
      */
-	disableDebugRenderOption: function(debugRenderOptionId) {
-		return c2.ffi.viewport_disableDebugRenderOption(this.selfPointer, debugRenderOptionId);
-	}
+    disableDebugRenderOption: function(debugRenderOptionId) {
+        return c2.ffi.viewport_disableDebugRenderOption(this.selfPointer, debugRenderOptionId);
+    }
 };
 
 var _config_prototype = {
@@ -49,12 +49,37 @@ var _config_prototype = {
     setMomentaryMessageVisible:  new NativeSetter('0xB0', 'uint8')
 }
 
+/**
+ * Object sent to sub_4DE1F0 to get list of the items
+ */
+var _unknown001_prototype = {
+        getProp000:     new NativeGetter('0x00', 'uint8'),
+        setProp000:     new NativeSetter('0x00', 'uint8'),
+        getProp002:     new NativeGetter('0x02', 'uint8'),
+        setProp002:     new NativeSetter('0x02', 'uint8'),
+        getProp003:     new NativeGetter('0x03', 'uint8'),
+        setProp003:     new NativeSetter('0x03', 'uint8'),
+        getProp004:     new NativeGetter('0x04', 'uint8'),
+        setProp004:     new NativeSetter('0x04', 'uint8'),
+        getProp010:     new NativeGetter('0x10', 'pointer'),
+        setProp010:     new NativeSetter('0x10', 'pointer'),
+        getProp00C:     new NativeGetter('0x0C', 'uint8'),
+        setProp00C:     new NativeSetter('0x0C', 'uint8'),
+}
+
+function Unknown001(address) {
+    if (address.isNull || (address === undefined)) {
+        address = Memory.alloc(0x14);
+    }
+    this.selfPointer = address;
+}
+
 function Game(address) {
-	this.selfPointer = address;
+    this.selfPointer = address;
 }
 
 function Viewport(address) {
-	this.selfPointer = address;
+    this.selfPointer = address;
 };
 
 function Config(address) {
@@ -64,6 +89,7 @@ function Config(address) {
 Game.prototype = _game_prototype;
 Viewport.prototype = _viewport_prototype;
 Config.prototype = _config_prototype;
+Unknown001.prototype = _unknown001_prototype;
 
 ///// Enums /////////////////
 
@@ -101,31 +127,43 @@ var DebugRenderOptionEnum = Object.freeze({
 ///// Main Object ///////////
 
 var c2 = {
-	getCurrentGame: function() {
-		return new Game(c2.ffi.game_getCurrentGamePointer());
-	},
+    getCurrentGame: function() {
+        return new Game(c2.ffi.game_getCurrentGamePointer());
+    },
     getConfig: function() {
         return new Config(c2.ffi.global_getUnknown001Pointer())
+    },
+    _getActorList: function() {
+        var obj = new Unknown001(NULL);
+        c2.ffi.initializeUnknown001(obj.selfPointer);
+        var p = c2.ffi.getParameterForGetActorList();
+        c2.ffi.getActorList(obj.selfPointer, p, 1);
+        
+        // Now "obj.getProp010()" contains an address
+        // We should be able to use it to get the list of actors 
     }
 };
 
 ///// FFI ///////////////////
 
 c2.ffi = {
-    global_getCurrentGamePointer:      function() { return Memory.readPointer(ptr('0x00B5A650')); },
-    global_getUnknown001Pointer:       function() { return Memory.readPointer(ptr('0x00B58490')); },
-    game_getCurrentViewportPointer:    new NativeFunction(ptr('0x008ED2C0'), 'pointer', ['pointer'], 'thiscall'),
-    game_toggleDebugOverlay:           new NativeFunction(ptr('0x0051CF20'), 'int', ['pointer', 'int'], 'thiscall'),
-    game_showDebugOverlay:             new NativeFunction(ptr('0x0051CC10'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
-    game_hideDebugOverlay:             new NativeFunction(ptr('0x0051CD30'), 'int', ['pointer', 'int'], 'thiscall'),
-    viewport_enableDebugRenderOption:  new NativeFunction(ptr('0x00523550'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
-    viewport_disableDebugRenderOption: new NativeFunction(ptr('0x005235B0'), 'int', ['pointer', 'int'], 'thiscall'),
-    openListaEntesWindow:              new NativeFunction(ptr('0x008ED9D0'), 'int', ['pointer'], 'thiscall'),
-    openListaBichosWindow:             new NativeFunction(ptr('0x008ED7A0'), 'int', ['pointer'], 'thiscall'),
-    openListaMisionesWindow:           new NativeFunction(ptr('0x008ED830'), 'int', ['pointer'], 'thiscall'),
-    openListaRollingWindow:            new NativeFunction(ptr('0x008ED8C0'), 'int', ['pointer'], 'thiscall'),
-    openVariablesGeneralesWindow:      new NativeFunction(ptr('0x008ED950'), 'int', ['pointer'], 'thiscall'),
-    openDeveloperWindow:               new NativeFunction(ptr('0x0060F200'), 'int', ['pointer'], 'thiscall'),
+    global_getCurrentGamePointer:       function() { return Memory.readPointer(ptr('0x00B5A650')); },
+    global_getUnknown001Pointer:        function() { return Memory.readPointer(ptr('0x00B58490')); },
+    game_getCurrentViewportPointer:     new NativeFunction(ptr('0x008ED2C0'), 'pointer', ['pointer'], 'thiscall'),
+    game_toggleDebugOverlay:            new NativeFunction(ptr('0x0051CF20'), 'int', ['pointer', 'int'], 'thiscall'),
+    game_showDebugOverlay:              new NativeFunction(ptr('0x0051CC10'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
+    game_hideDebugOverlay:              new NativeFunction(ptr('0x0051CD30'), 'int', ['pointer', 'int'], 'thiscall'),
+    viewport_enableDebugRenderOption:   new NativeFunction(ptr('0x00523550'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
+    viewport_disableDebugRenderOption:  new NativeFunction(ptr('0x005235B0'), 'int', ['pointer', 'int'], 'thiscall'),
+    openListaEntesWindow:               new NativeFunction(ptr('0x008ED9D0'), 'int', ['pointer'], 'thiscall'),
+    openListaBichosWindow:              new NativeFunction(ptr('0x008ED7A0'), 'int', ['pointer'], 'thiscall'),
+    openListaMisionesWindow:            new NativeFunction(ptr('0x008ED830'), 'int', ['pointer'], 'thiscall'),
+    openListaRollingWindow:             new NativeFunction(ptr('0x008ED8C0'), 'int', ['pointer'], 'thiscall'),
+    openVariablesGeneralesWindow:       new NativeFunction(ptr('0x008ED950'), 'int', ['pointer'], 'thiscall'),
+    openDeveloperWindow:                new NativeFunction(ptr('0x0060F200'), 'int', ['pointer'], 'thiscall'),
+    getActorList:                       new NativeFunction(ptr('0x004DE1F0'), 'int', ['pointer', 'pointer', 'int'], 'thiscall'),
+    initializeUnknown001:               new NativeFunction(ptr('0x00472820'), 'int', ['pointer'], 'thiscall'),
+    getParameterForGetActorList:        new NativeFunction(ptr('0x004EDFF0'), 'pointer', [], 'thiscall')
 };
 
 ///// Utils /////////////////
