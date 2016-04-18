@@ -14,6 +14,9 @@ var _game_prototype = {
     },
     getCurrentViewport: function() {
         return new Viewport(c2.ffi.game_getCurrentViewportPointer(this.selfPointer));
+    },
+    getObjGameOffset640: function() {
+        return new ObjGameOffset640(Memory.readPointer(this.selfPointer.add(0x640)));
     }
 };
 
@@ -55,11 +58,53 @@ var _config_prototype = {
      * Sets the value of FRAMEADO_ADAPTATIVO variable
      */
     setIsAdaptiveFrameRate:         new NativeGetter('0x6B', 'uint8'),
+    
+    getIsAtmosphericEffects:            new NativeGetter('0x68', 'uint8'), // EFECTOS_ATMOSFERICOS
+    getIsZoomGui:                       new NativeGetter('0x69', 'uint8'), // ZOOM_GUAI
+    getIs3DFaces:                       new NativeGetter('0x6A', 'uint8'), // CARAS3D
+    getNivel:                           new NativeGetter('0x6C', 'int32'), // NIVEL
+    getDisableAdaptiveActorPainting:    new NativeGetter('0x6A', 'uint8'), // QUITA_PINTADO_BICHOS_ADAPTATIVO
 }
 
 var _actor_prototype = {
     getActorName:   new NativeGetter('0x10', 'string'),
-    setActorName:   new NativeSetter('0x10', 'string')
+    setActorName:   new NativeSetter('0x10', 'string'),
+}
+
+var _global_00B584D0_prototype = {
+    selfPointer:    NULL,
+    insertActor:   function (macro, objGameOffset640) {
+        // TODO: refactor this function
+        var stringPointer = Memory.allocUtf8String(macro);
+        var eax, ecx, edx, edi, esi, ebx;
+        
+        eax = c2.ffi.sub_00414430(this.selfPointer, stringPointer, objGameOffset640.selfPointer)
+        edi = eax;
+        ebx = Memory.readPointer(edi.add(0x8));
+        eax = c2.ffi.sub_004113F0(this.selfPointer, 0x248);
+        esi = NULL;
+        if (!eax.isNull()) {
+            eax = c2.ffi.sub_0058A470(eax);
+            esi = eax;
+        }
+        
+        c2.ffi.sub_0058AE90(esi, ebx, NULL);
+        c2.ffi.sub_00591F10(esi);
+        ecx = c2.ffi.global_getWorld();
+        c2.ffi.sub_00561350(ecx, esi);
+        c2.ffi.sub_00562910(ecx, esi, 0xD, 0x1);
+        c2.ffi.sub_00591600(esi, 0x1);
+        
+        c2.ffi.sub_00414580(this.selfPointer, edi);
+        
+        edx = Memory.readPointer(esi);
+        var f1 = new NativeFunction(Memory.readPointer(edx.add(0x4)), 'pointer', ['pointer', 'int', 'int'], 'thiscall');
+        f1(esi, 0x7D, 0x0);
+    }
+}
+
+var _obj_game_offset_640_prototype = {
+    selfPointer:    NULL
 }
 
 function Actor(address) {
@@ -72,17 +117,26 @@ function Game(address) {
 
 function Viewport(address) {
     this.selfPointer = address;
-};
+}
 
 function Config(address) {
     this.selfPointer = address;
-};
+}
+
+function Global00B584D0(address) {
+    this.selfPointer = address;
+} 
+
+function ObjGameOffset640(address) {
+    this.selfPointer = address;
+}
 
 Game.prototype = _game_prototype;
 Viewport.prototype = _viewport_prototype;
 Config.prototype = _config_prototype;
 Actor.prototype = _actor_prototype;
-
+ObjGameOffset640.prototype = _obj_game_offset_640_prototype;
+Global00B584D0.prototype = _global_00B584D0_prototype;
 ///// Enums /////////////////
 
 var DebugOverlayEnum = Object.freeze({
@@ -119,11 +173,20 @@ var DebugRenderOptionEnum = Object.freeze({
 ///// Main Object ///////////
 
 var c2 = {
+    _testInsertActor: function() {
+        var g = c2.getCurrentGame();
+        var glob = c2.getGlobal00B584D0();
+        var obj = g.getObjGameOffset640();
+        return glob.insertActor(_test_macro, obj); 
+    },
     getCurrentGame: function() {
-        return new Game(c2.ffi.game_getCurrentGamePointer());
+        return new Game(c2.ffi.global_getCurrentGamePointer());
     },
     getConfig: function() {
-        return new Config(c2.ffi.global_getConfigPointer())
+        return new Config(c2.ffi.global_getConfigPointer());
+    },
+    getGlobal00B584D0: function() {
+        return new Global00B584D0(c2.ffi.global_getUnknown_00B584D0());
     },
     getActorList: function() {
         var actors = []; 
@@ -189,7 +252,22 @@ c2.ffi = {
     global_getCurrentGamePointer:       function() { return Memory.readPointer(ptr('0x00B5A650')); },
     global_getConfigPointer:            function() { return Memory.readPointer(ptr('0x00B58490')); },
     global_getScene:                    function() { return Memory.readPointer(ptr('0x00B58488')); },
-    global_getUnknown_00B64A28:         function() { return Memory.readPointer(ptr('0x00B64A28')); },
+    global_getWorld:                    function() { return Memory.readPointer(ptr('0x00B64A28')); },
+    global_getUnknown_00B584D0:         function() { return Memory.readPointer(ptr('0x00B584D0')); },
+    sub_0041C7A0:                       new NativeFunction(ptr('0x0041C7A0'), 'pointer', ['pointer'], 'thiscall'),
+    sub_0041C860:                       new NativeFunction(ptr('0x0041C860'), 'pointer', ['pointer', 'pointer', 'pointer'], 'thiscall'),
+    sub_00411410:                       new NativeFunction(ptr('0x00411410'), 'pointer', ['pointer', 'pointer'], 'thiscall'),
+    sub_00414430:                       new NativeFunction(ptr('0x00414430'), 'pointer', ['pointer', 'pointer', 'pointer'], 'thiscall'),
+    sub_004113F0:                       new NativeFunction(ptr('0x004113F0'), 'pointer', ['pointer', 'int'], 'thiscall'),
+    sub_00414580:                       new NativeFunction(ptr('0x00414580'), 'int', ['pointer', 'pointer'], 'thiscall'),
+    sub_00591F10:                       new NativeFunction(ptr('0x00591F10'), 'int', ['pointer'], 'thiscall'),
+    sub_00561350:                       new NativeFunction(ptr('0x00561350'), 'int', ['pointer', 'pointer'], 'thiscall'),
+    sub_00562910:                       new NativeFunction(ptr('0x00562910'), 'int', ['pointer', 'pointer', 'int', 'int'], 'thiscall'),
+    sub_00591600:                       new NativeFunction(ptr('0x00591600'), 'int', ['pointer', 'int'], 'thiscall'),
+    sub_0058A470:                       new NativeFunction(ptr('0x0058A470'), 'pointer', ['pointer'], 'thiscall'),
+    sub_0058AE90:                       new NativeFunction(ptr('0x0058AE90'), 'pointer', ['pointer', 'pointer', 'pointer'], 'thiscall'),
+    world_getSceneIndexByName:          new NativeFunction(ptr('0x0057F920'), 'int', ['pointer', 'pointer', 'pointer'], 'thiscall'),
+    world_getSceneByIndex:              new NativeFunction(ptr('0x00573F60'), 'pointer', ['pointer', 'int'], 'thiscall'),
     game_getCurrentViewportPointer:     new NativeFunction(ptr('0x008ED2C0'), 'pointer', ['pointer'], 'thiscall'),
     game_toggleDebugOverlay:            new NativeFunction(ptr('0x0051CF20'), 'int', ['pointer', 'int'], 'thiscall'),
     game_showDebugOverlay:              new NativeFunction(ptr('0x0051CC10'), 'int', ['pointer', 'int', 'int'], 'thiscall'),
@@ -273,3 +351,203 @@ function NativeSetter(offset, type) {
 //     onEnter: function(args) {
 //     }
 // });
+
+var _test_macro = `
+[
+	.POS 
+	[
+		.XYZ 
+		(
+			-231.0 -371.0 0 
+		)
+		.ESC EXTERIOR 
+	]
+	.ANGULO 331.0 
+	.TOKEN CABO_03 
+	.BANDO ALEMAN 
+	.HTIP SOLD 
+	.COMPORTAMIENTO 
+	(
+		ComporAlemanScript
+		[
+			.VIGILADOR
+			[
+				.AMPL_NORMAL 70
+				.MAX_ANG_BARRIDO 50
+				.LONG_NORMAL 600
+
+		   ]
+			.EVENTOS_RUTA 
+			(
+				
+			)
+			.DISPARADOR 
+			[
+				.ARMA ALEMAN_FUSIL 
+			]
+			.NUM_GRANADAS 0 
+			.ANIMACION ALEFUS.ANI 
+			.GESTOR_MOVIMIENTO 
+			[
+			]
+		]
+	)
+	.VISTA 
+	(
+		VistaTriangular 
+		[
+		]
+	)
+	.OIDO 
+	(
+		Oido 
+		[
+		]
+	)
+	.MOTOR 
+	(
+		MotorPeaton 
+		[
+		]
+	)
+	.ANIMADOR 
+	(
+		AnimadorHumano 
+		[
+			.VOL 
+			(
+				Cilindro 
+				[
+					.RADIO 20.0 
+					.ALTURA 50.0 
+				]
+			)
+			.ANIM ALEFUS.ANI 
+		]
+	)
+	.VOLCOLISION 
+	(
+		Cilindro 
+		[
+			.RADIO 12.0 
+			.ALTURA 50.0 
+		]
+	)
+	.TIPOCOLISION PEATON 
+	.ZONASELECCION 
+	(
+		Cilindro 
+		[
+			.RADIO 10.0 
+			.ALTURA 50.0 
+		]
+	)
+	.LISTAS 
+	(
+		CHOC SELE VISI EJEC FLAE 
+	)
+	.COLORPUNTOLIBRETA ALEMAN 
+	.USAHAB 
+	[
+	]
+	.PUEDE_CONDUCIR 
+	(
+		WILLIS ZODIAK CAMION CANON LANCHA_MOTORA NIDO_AMETRALLADORAS ASCENSOR MONTA_ALEMAN SILLA CAMA 
+	)
+	.MICUADRICULA 
+	[
+		.DIMCUADX  4.0 
+		.DIMCUADY  6.0 
+		.GFXCUAD CUADRIC 
+	]
+	.GEL 
+	[
+	]
+	.DUMMY 
+	[
+		.ANIMADOR 
+		(
+			AnimadorHumano 
+			[
+				.VOL 
+				(
+					Cilindro 
+					[
+						.RADIO 10.0 
+						.ALTURA 50.0 
+					]
+				)
+				.ANIM ALEFUS.ANI 
+			]
+		)
+	]
+	.BICHOS 
+	(
+		
+		[
+			.TOKEN MARLBORO_01 
+			.COLORPUNTOLIBRETA OBJETO 
+			.POS 
+			[
+				.XYZ 
+				(
+					-236.0 -394.0 0 
+				)
+				.ESC EXTERIOR 
+			]
+			.BANDO NEUTRAL 
+			.HTIP TABC 
+			.COMPORTAMIENTO 
+			(
+				ComporTabaco 
+				[
+					.NUMCIGARROS  5.0 
+					.NUMUNIDADES  1.0 
+				]
+			)
+			.ZONASELECCION 
+			(
+				Cilindro 
+				[
+					.RADIO 10.0 
+					.ALTURA 20.0 
+				]
+			)
+			.VOLCOLISION 
+			(
+				Cilindro 
+				[
+					.RADIO 12.0 
+					.ALTURA 20.0 
+				]
+			)
+			.ANIMADOR 
+			(
+				Animador2d 
+				[
+					.VOL 
+					(
+						Cilindro 
+						[
+							.RADIO 20.0 
+							.ALTURA 30.0 
+						]
+					)
+					.ANI TABACO.AN2 
+				]
+			)
+			.ANGULO 0 
+			.BICHOENCUAD 
+			[
+				.DIMBICHOX  1.0 
+				.DIMBICHOY  1.0 
+				.GFX CTABACO 
+			]
+			.LISTAS 
+			(
+				VISI SELE EJEC FLAS 
+			)
+		]
+	)
+]
+`;
