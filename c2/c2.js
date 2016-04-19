@@ -1,7 +1,5 @@
 'use strict';
-
 ///// Classes ///////////////
-
 var _game_prototype = {
     selfPointer: NULL,
     
@@ -79,6 +77,7 @@ var _global_00B584D0_prototype = {
         var eax, ecx, edx, edi, esi, ebx;
         
         eax = c2.ffi.sub_00414430(this.selfPointer, stringPointer, objGameOffset640.selfPointer)
+        console.log(eax.toString());
         edi = eax;
         ebx = Memory.readPointer(edi.add(0x8));
         eax = c2.ffi.sub_004113F0(this.selfPointer, 0x248);
@@ -173,12 +172,6 @@ var DebugRenderOptionEnum = Object.freeze({
 ///// Main Object ///////////
 
 var c2 = {
-    _testInsertActor: function() {
-        var g = c2.getCurrentGame();
-        var glob = c2.getGlobal00B584D0();
-        var obj = g.getObjGameOffset640();
-        return glob.insertActor(_test_macro, obj); 
-    },
     getCurrentGame: function() {
         return new Game(c2.ffi.global_getCurrentGamePointer());
     },
@@ -246,6 +239,17 @@ var c2 = {
     }
 };
 
+///// Events ////////////////
+c2.events = {
+    onKeyboardEvent(state, key,  isShiftPressed, isCtrlPressed, isAltPressed) {
+        // TODO
+        // var g = c2.getCurrentGame();
+        // var glob = c2.getGlobal00B584D0();
+        // var obj = g.getObjGameOffset640();
+        // return glob.insertActor(_test_macro, obj); 
+    }
+}
+
 ///// FFI ///////////////////
 
 c2.ffi = {
@@ -254,6 +258,11 @@ c2.ffi = {
     global_getScene:                    function() { return Memory.readPointer(ptr('0x00B58488')); },
     global_getWorld:                    function() { return Memory.readPointer(ptr('0x00B64A28')); },
     global_getUnknown_00B584D0:         function() { return Memory.readPointer(ptr('0x00B584D0')); },
+    global_getCursorMapX:               function() { return Memory.readFloat(ptr('0x00B619F0')); },
+    global_getCursorMapY:               function() { return Memory.readFloat(ptr('0x00B619F4')); },
+    global_getCursorWorldX:             function() { return Memory.readFloat(ptr('0x00B619F8')); },
+    global_getCursorWorldY:             function() { return Memory.readFloat(ptr('0x00B619FC')); },
+    global_getCursorWorldZ:             function() { return Memory.readFloat(ptr('0x00B61A00')); },
     sub_0041C7A0:                       new NativeFunction(ptr('0x0041C7A0'), 'pointer', ['pointer'], 'thiscall'),
     sub_0041C860:                       new NativeFunction(ptr('0x0041C860'), 'pointer', ['pointer', 'pointer', 'pointer'], 'thiscall'),
     sub_00411410:                       new NativeFunction(ptr('0x00411410'), 'pointer', ['pointer', 'pointer'], 'thiscall'),
@@ -342,7 +351,27 @@ function NativeSetter(offset, type) {
     }
 }
 
+// String.format function
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
 ///// Hooks /////////////////
+
+Interceptor.attach(ptr('0x008D99A0'), {
+    onEnter: function(args) {
+        c2.ffi.onKeyboardEvent();
+    }
+});
+
 // Interceptor.attach(ptr('0x005189A0'), {
 //     onEnter: function(args) {
 //     }
@@ -358,7 +387,7 @@ var _test_macro = `
 	[
 		.XYZ 
 		(
-			-231.0 -371.0 0 
+			{0} {1} {2} 
 		)
 		.ESC EXTERIOR 
 	]
