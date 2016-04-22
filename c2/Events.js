@@ -20,7 +20,7 @@ global.c2.events = {
 				c2.ffi.global_getCursorWorldZ()
 			);
 
-			return glob.insertActor(mymacro, obj);
+			console.log(glob.insertActor(mymacro, obj));
 		} else if ((e.keyState == KeyStateEnum.KEY_DOWN) &&
 			(e.keyCode == 'Z'.charCodeAt()) &&
 			(e.modifierKeyState == ModifierKeyStateEnum.KEY_CTRL)) {
@@ -34,7 +34,7 @@ global.c2.events = {
 				c2.ffi.global_getCursorWorldZ()
 			);
 
-			return glob.insertActor(mymacro, obj);
+			console.log(glob.insertActor(mymacro, obj));
 		}
     }
 }

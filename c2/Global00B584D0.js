@@ -13,9 +13,10 @@ global.Global00B584D0.prototype = {
         // TODO: refactor this function
         var stringPointer = Memory.allocUtf8String(macro);
         var eax, ecx, edx, edi, esi, ebx;
+        var retval;
         
         eax = c2.ffi.sub_00414430(this.selfPointer, stringPointer, objGameOffset640.selfPointer)
-        console.log(eax.toString());
+        // console.log(eax.toString());
         edi = eax;
         ebx = Memory.readPointer(edi.add(0x8));
         eax = c2.ffi.sub_004113F0(this.selfPointer, 0x248);
@@ -37,5 +38,7 @@ global.Global00B584D0.prototype = {
         edx = Memory.readPointer(esi);
         var f1 = new NativeFunction(Memory.readPointer(edx.add(0x4)), 'pointer', ['pointer', 'int', 'int'], 'thiscall');
         f1(esi, 0x7D, 0x0);
+        
+        return eax;
     }
 }
