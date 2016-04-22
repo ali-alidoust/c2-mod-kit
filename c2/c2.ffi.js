@@ -1,5 +1,4 @@
 'use strict';
-
 global.c2.ffi = {
     global_getCurrentGamePointer:       function() { return Memory.readPointer(ptr('0x00B5A650')); },
     global_getConfigPointer:            function() { return Memory.readPointer(ptr('0x00B58490')); },
