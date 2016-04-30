@@ -33,24 +33,37 @@ global.NativeGetter = function(offset, type, length) {
         'string':       Memory.readCString, // Reads string from pointer
     }
     
+    var converter = function (value) {
+        return value;
+    };
+
+    if (typeof type === 'function') {
+        converter = function (value) {
+            return new type(value);
+        }
+
+        type = 'pointer';
+    }
+
     if (!(type in readers)) {
         throw 'No getter exists for type:' + type;
     }
-    
+
     var getter = readers[type];
-    
-    return function() {
+
+    return function () {
         var value;
         if (type.startsWith('string')) {
             value = getter(this.selfPointer.add(offset), length);
         } else {
-            value = getter(this.selfPointer.add(offset));    
+            value = getter(this.selfPointer.add(offset));
         }
-        
+
         if (type.startsWith('bool')) {
             return value == 1;
         }
-        return value;
+
+        return converter(value);
     }
 }
 
@@ -75,6 +88,19 @@ global.NativeSetter = function(offset, type, length) {
         'string':       Memory.writeCString,
     }
     
+    var converter = function (value) {
+        return value;
+    };
+
+    if (typeof type === 'function') {
+        converter = function (value) {
+            return value.selfPointer;
+        }
+
+        type = 'pointer';
+    }
+    
+    
     if (!(type in writers)) {
         throw 'No setter exists for type:' + type;
     }
@@ -82,6 +108,8 @@ global.NativeSetter = function(offset, type, length) {
     var setter = writers[type];
     
     return function(value) {
+        value = converter(value);
+        
         if (type.startsWith('bool')) {
             value = value ? 1 : 0;
         }
