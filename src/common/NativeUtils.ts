@@ -1,19 +1,34 @@
-'use strict';
+/// <reference path="./Frida.ts" />
+/// <reference path="./NativeObject.ts" />
+function native<T extends NativeObject>(
+    offset: number, 
+    type: string | { new (address): T; }, 
+    writable: boolean = true, 
+    length: number = -1) : PropertyDecorator {
+    return function (target: Object, key: string) {
+        let getter = NativeGetter(offset, type, length);
+        let setter = writable ? NativeSetter(offset, type, length) : (value) => {throw `Property "${key}" is read-only.`}; 
 
-global.NativeProperty = function (offset, type, writable, length) {
-    var retval = {};
-    retval.get = new NativeGetter(offset, type, length);
-    retval.enumerable = true;
-    if (writable == true) {
-        retval.set = new NativeSetter(offset, type, length);
-    } else {
-        retval.set = function (value) { throw 'this property is read-only.' };
+        // function getter() {
+        //     return value;
+        // }
+
+        // function setter(newValue) {
+        //     if (newValue <= 90) newValue += 10;
+        //     value = newValue;
+        // }
+
+        if (delete this[key]) {
+            Object.defineProperty(target, key, {
+                get: getter,
+                set: setter
+            });
+        }
     }
-    return retval;
 }
 
-global.NativeGetter = function(offset, type, length) {
-    var readers = {
+function NativeGetter(offset: number, type: any, length: number) {
+    let readers = {
         'unknown32':    Memory.readU32,
         'unknown16':    Memory.readU16,
         'unknown8':     Memory.readU8,
@@ -33,15 +48,14 @@ global.NativeGetter = function(offset, type, length) {
         'string':       Memory.readCString, // Reads string from pointer
     }
     
-    var converter = function (value) {
+    let converter = function (value) {
         return value;
     };
 
-    if (typeof type === 'function') {
+    if (typeof type != 'string') {
         converter = function (value) {
             return new type(value);
         }
-
         type = 'pointer';
     }
 
@@ -49,14 +63,22 @@ global.NativeGetter = function(offset, type, length) {
         throw 'No getter exists for type:' + type;
     }
 
-    var getter = readers[type];
+    let getter = readers[type];
 
-    return function () {
-        var value;
-        if (type.startsWith('string')) {
-            value = getter(this.selfPointer.add(offset), length);
+    return () => {
+        let base;
+        
+        if ('selfPointer' in this) {
+            base = this.selfPointer;
         } else {
-            value = getter(this.selfPointer.add(offset));
+            base = ptr(0);
+        }
+      
+        let value;
+        if (type.startsWith('string')) {
+            value = getter(base.add(offset), length);
+        } else {
+            value = getter(base.add(offset));
         }
 
         if (type.startsWith('bool')) {
@@ -67,8 +89,8 @@ global.NativeGetter = function(offset, type, length) {
     }
 }
 
-global.NativeSetter = function(offset, type, length) {
-    var writers = {
+function NativeSetter(offset, type, length) {
+    let writers = {
         'unknown32':    Memory.writeU32,
         'unknown16':    Memory.writeU16,
         'unknown8':     Memory.writeU8,
@@ -88,12 +110,12 @@ global.NativeSetter = function(offset, type, length) {
         'string':       Memory.writeCString,
     }
     
-    var converter = function (value) {
+    let converter = (value) => {
         return value;
     };
 
     if (typeof type === 'function') {
-        converter = function (value) {
+        converter = (value) => {
             return value.selfPointer;
         }
 
@@ -105,9 +127,17 @@ global.NativeSetter = function(offset, type, length) {
         throw 'No setter exists for type:' + type;
     }
     
-    var setter = writers[type];
+    let setter = writers[type];
     
-    return function(value) {
+    return (value) => {
+        let base;
+        
+        if ('selfPointer' in this) {
+            base = this.selfPointer;
+        } else {
+            base = ptr(0);
+        }
+        
         value = converter(value);
         
         if (type.startsWith('bool')) {
@@ -115,22 +145,9 @@ global.NativeSetter = function(offset, type, length) {
         }
         
         if (type.startsWith('string')) {
-            setter(this.selfPointer.add(offset), value, length);
+            setter(base.add(offset), value, length);
         } else {
-            setter(this.selfPointer.add(offset), value);   
+            setter(base.add(offset), value);   
         }
     }
-}
-
-// String.format function
-if (!String.prototype.format) {
-  String.prototype.format = function() {
-    var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) { 
-      return typeof args[number] != 'undefined'
-        ? args[number]
-        : match
-      ;
-    });
-  };
 }

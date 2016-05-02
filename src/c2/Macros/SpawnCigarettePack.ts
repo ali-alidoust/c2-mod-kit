@@ -1,21 +1,28 @@
-'use strict';
-require('./utils/utils.js');
+namespace C2.Macros {
+	export class SpawnCigarettePack extends Macro {
+		public token: string;
+		public x: number;
+		public y: number;
+		public z: number;
 
-global.c2.macros = global.c2.macros || {};
+		constructor(token: string, x: number, y: number, z: number) {
+			super();
+			this.token = token;
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
 
-global.c2.macros.spawnCigarettePack = function(x, y, z) {
-       return template.format(x, y, z);
-}
-
-var template = `
+		public toString() {
+			return `
 [
-	.TOKEN MARLBORO_01 
+	.TOKEN ${this.token} 
 	.COLORPUNTOLIBRETA OBJETO 
 	.POS 
 	[
 		.XYZ 
 		(
-			{0} {1} {2} 
+			${this.x} ${this.y} ${this.z} 
 		)
 		.ESC EXTERIOR 
 	]
@@ -73,3 +80,6 @@ var template = `
 	)
 ]
 `;
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "ES5",
+        "module": "system",
+        "outFile": "./dist/c2-mod-kit.js"
+    },
+    "files": [
+        "c2-mod-kit.ts"
+    ]
+}

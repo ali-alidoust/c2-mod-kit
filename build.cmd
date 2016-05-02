@@ -1,5 +1,4 @@
 @echo off
-del .\dist\*.* -F
-node build.js
-copy .\c2.unified.js .\dist\c2.unified.js
+del /F .\dist\*.* 
+tsc
 pyinstaller c2-mod-kit.py -i icon.ico -F
