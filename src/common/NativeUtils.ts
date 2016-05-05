@@ -65,7 +65,7 @@ function NativeGetter(offset: number, type: any, length: number) {
 
     let getter = readers[type];
 
-    return () => {
+    return function() {
         let base;
         
         if ('selfPointer' in this) {
@@ -129,7 +129,7 @@ function NativeSetter(offset, type, length) {
     
     let setter = writers[type];
     
-    return (value) => {
+    return function(value) {
         let base;
         
         if ('selfPointer' in this) {

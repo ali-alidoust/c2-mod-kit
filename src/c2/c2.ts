@@ -1,8 +1,9 @@
 /// <reference path="./Game.ts" />
 /// <reference path="./FFI.ts" />
-/// <reference path="./Config" />
+/// <reference path="./Config.ts" />
 /// <reference path="./Global00B584D0.ts" />
 /// <reference path="../common/NativeUtils.ts" />
+/// <reference path="./Renderer.ts" />
 
 
 
@@ -17,6 +18,10 @@ class c2 {
 
     public static getGlobal00B584D0() {
         return new C2.Global00B584D0(C2.FFI.global_getUnknown_00B584D0());
+    }
+    
+    public static getRenderer() {
+        return new C2.Renderer(C2.FFI.global_getRenderer());
     }
 
     public static getActorList() {
@@ -84,15 +89,3 @@ class c2 {
         return actors;
     }
 };
-
-// require('./c2.utils.js');
-// require('./c2.ffi.js');
-// require('./Game.js');
-// require('./Config.js');
-// require('./Actor.js');
-// require('./Viewport.js');
-// require('./Global00B584D0.js');
-// require('./ObjGameOffset640.js');
-// require('./Events.js')
-// require('./Hooks.js');
-

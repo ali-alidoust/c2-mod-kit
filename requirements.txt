@@ -1,0 +1,3 @@
+frida==7.1.9
+javascript==2015.32.59
+PyBuilder==0.11.8

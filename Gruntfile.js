@@ -1,22 +1,22 @@
 module.exports = function (grunt) {
     grunt.initConfig({
-        jshint: {
-            files: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
-            options: {
-                globals: {
-                    jQuery: true
-                }
+        clean: {
+          release: ['./dist']  
+        },
+        ts: {
+            default: {
+                tsconfig: true
             }
         },
-        watch: {
-            files: ['<%= jshint.files %>'],
-            tasks: ['jshint']
+        exec: {
+          create_executable: {
+              command: 'pyinstaller c2-mod-kit.py -i icon.ico -F'
+          }
         }
     });
-
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-browserify');
-
-    grunt.registerTask('default', ['jshint', 'browserify']);
+    grunt.loadNpmTasks('grunt-ts');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-exec');
+    grunt.registerTask('default', ['ts']);
+    grunt.registerTask('dist', ['clean', 'ts', 'exec:create_executable']);
 };

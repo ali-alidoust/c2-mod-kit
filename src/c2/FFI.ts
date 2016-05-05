@@ -1,9 +1,9 @@
-namespace C2 {    
+namespace C2 {
     export class FFI {
         static temp;
         static global_getCurrentGamePointer() { return Memory.readPointer(ptr('0x00B5A650')); };
         static global_getConfigPointer() { return Memory.readPointer(ptr('0x00B58490')); };
-        static global_getScene() { return Memory.readPointer(ptr('0x00B58488')); };
+        static global_getRenderer() { return Memory.readPointer(ptr('0x00B58488')); };
         static global_getWorld() { return Memory.readPointer(ptr('0x00B64A28')); };
         static global_getUnknown_00B584D0() { return Memory.readPointer(ptr('0x00B584D0')); };
         static global_getCursorMapX() { return Memory.readFloat(ptr('0x00B619F0')); };
@@ -11,6 +11,7 @@ namespace C2 {
         static global_getCursorWorldX() { return Memory.readFloat(ptr('0x00B619F8')); };
         static global_getCursorWorldY() { return Memory.readFloat(ptr('0x00B619FC')); };
         static global_getCursorWorldZ() { return Memory.readFloat(ptr('0x00B61A00')); };
+        static global_getInputHandler() { return Memory.readPointer(ptr('0x00B584BC')); };
         static sub_0041C7A0 = new NativeFunction(ptr('0x0041C7A0'), 'pointer', ['pointer'], 'thiscall');
         static sub_0041C860 = new NativeFunction(ptr('0x0041C860'), 'pointer', ['pointer', 'pointer', 'pointer'], 'thiscall');
         static sub_00411410 = new NativeFunction(ptr('0x00411410'), 'pointer', ['pointer', 'pointer'], 'thiscall');
