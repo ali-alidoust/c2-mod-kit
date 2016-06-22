@@ -3,3 +3,4 @@
 /dist
 /c2.unified.js
 /.tscache
+*.log
