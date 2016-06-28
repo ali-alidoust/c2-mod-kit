@@ -2,9 +2,6 @@
 /// <reference path="./c2/EventHandler.ts" />
 /// <reference path="./common/Frida.ts" />
 
-declare var global;
-declare var rpc;
-
 var f = new global.File('./c2-mod-kit.log', 'wt');
 
 function timestamp() {
@@ -43,6 +40,7 @@ function timestamp() {
 
 function writeLog(line) {
     f.write(`[${timestamp()}] ${line}\n`);
+    f.flush();
 }
 
 Interceptor.attach(ptr('0x008D99A0'), {
@@ -62,13 +60,13 @@ Interceptor.attach(ptr('0x008D99A0'), {
 
 
 
-Interceptor.attach(ptr('0x00418E40'), {
-    onEnter: function (args) {
-        let pString01 = ptr(args[0]);
-        let String01 = Memory.readCString(pString01);
-        writeLog(`Parsing tag: "${String01}"`);
-    }
-})
+// Interceptor.attach(ptr('0x00418E40'), {
+//     onEnter: function (args) {
+//         let pString01 = ptr(args[0]);
+//         let String01 = Memory.readCString(pString01);
+//         writeLog(`Tag parsed: "${String01}"`);
+//     }
+// })
 
 // Interceptor.attach(ptr('0x00907C00'), {
 //     onEnter: function (args) {
@@ -92,12 +90,42 @@ Interceptor.attach(ptr('0x00418E40'), {
 //     }
 // })
 
-declare var send;
-
 Interceptor.attach(ptr('0x004144B0'), {
     onEnter: function (args) {
         let pFilename = ptr(args[0]);
         let filename = Memory.readAnsiString(pFilename);
         writeLog(`Loading Script File: "${filename}"`);
     }
-})
+});
+
+Interceptor.attach(ptr('0x004165A0'), {
+    onEnter: function (args) {
+        let pError = ptr(args[0]);
+        let error = Memory.readAnsiString(pError);
+        error = error.replace(/\r?\n$/gm, '');
+        writeLog(`Error While Executing Script: "${error}"`);
+    }
+});
+
+Interceptor.attach(ptr('0x008F74DE'), {
+    onEnter: function (args) {
+        this.pResult = ptr(args[0]);
+    },
+    onLeave: function (retval) {
+        let result = Memory.readAnsiString(this.pResult);
+        // error = error.replace(/\r?\n$/gm, '');
+        writeLog(`Result by sprintf: "${result}"`);
+    }
+});
+
+Interceptor.attach(ptr('0x00418E40'), {
+    onEnter: function (args) {
+        this.pTagName = ptr(args[0]);
+    },
+    onLeave: function (retval) {
+        if (ptr(retval).isNull()) {
+            let tagName = Memory.readAnsiString(this.pTagName);
+            writeLog(`Tag not found: "${tagName}"`);
+        }
+    }
+});
