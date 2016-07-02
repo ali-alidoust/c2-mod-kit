@@ -1,7 +1,4 @@
-/// <reference path="../common/Frida.ts" />
-/// <reference path="../common/NativeObject.ts" />
+import { NativeObject } from '../../lib/spectre/NativeObject';
 
-namespace C2 {
-    export class ObjGameOffset640 extends NativeObject {
-    }
+export class ObjGameOffset640 extends NativeObject {
 }

@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['c2-mod-kit.py'],
-             pathex=['C:\\root\\Personal\\Projects\\c2-mod-kit'],
+             pathex=['c:\\root\\Personal\\Projects\\c2-mod-kit'],
              binaries=None,
              datas=None,
              hiddenimports=[],

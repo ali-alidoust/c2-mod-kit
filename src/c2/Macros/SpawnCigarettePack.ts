@@ -1,20 +1,21 @@
-namespace C2.Macros {
-	export class SpawnCigarettePack extends Macro {
-		public token: string;
-		public x: number;
-		public y: number;
-		public z: number;
+import { Macro } from './Macro';
 
-		constructor(token: string, x: number, y: number, z: number) {
-			super();
-			this.token = token;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
+export class SpawnCigarettePack extends Macro {
+	public token: string;
+	public x: number;
+	public y: number;
+	public z: number;
 
-		public toString() {
-			return `
+	constructor(token: string, x: number, y: number, z: number) {
+		super();
+		this.token = token;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+	public toString() {
+		return `
 [
 	.TOKEN ${this.token} 
 	.COLORPUNTOLIBRETA OBJETO 
@@ -80,6 +81,5 @@ namespace C2.Macros {
 	)
 ]
 `;
-		}
 	}
 }

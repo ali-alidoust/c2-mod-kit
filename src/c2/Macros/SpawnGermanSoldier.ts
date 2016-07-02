@@ -1,19 +1,20 @@
-namespace C2.Macros {
-	export class SpawnGermanSoldier extends Macro {
-		public token: string;
-		public x: number;
-		public y: number;
-		public z: number;
-		constructor(token: string, x: number, y: number, z: number) {
-			super();
-			this.token = token;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
+import { Macro } from './Macro';
 
-		public toString() {
-			return `
+export class SpawnGermanSoldier extends Macro {
+	public token: string;
+	public x: number;
+	public y: number;
+	public z: number;
+	constructor(token: string, x: number, y: number, z: number) {
+		super();
+		this.token = token;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+	public toString() {
+		return `
 [
 	.POS 
 	[
@@ -148,6 +149,5 @@ namespace C2.Macros {
 	)
 ]
 `;
-		}
 	}
 }

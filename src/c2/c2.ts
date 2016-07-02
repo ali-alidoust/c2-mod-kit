@@ -1,27 +1,29 @@
-/// <reference path="./Game.ts" />
-/// <reference path="./FFI.ts" />
-/// <reference path="./Config.ts" />
-/// <reference path="./Global00B584D0.ts" />
-/// <reference path="../common/NativeUtils.ts" />
-/// <reference path="./Renderer.ts" />
+/// <reference path="../../lib/spectre/Frida.d.ts" />
 
+import { property } from '../../lib/spectre/NativeDecorations';
+import { UINT8, POINTER } from '../../lib/spectre/Primitives';
+import { Game } from './Game';
+import { FFI } from './FFI';
+import { Config } from './Config';
+import { Renderer } from './Renderer';
+import { Global00B584D0 } from './Global00B584D0';
+import { Actor } from './Actor';
 
-
-class c2 {
+export class c2 {
     public static getCurrentGame() {
-        return new C2.Game(C2.FFI.global_getCurrentGamePointer());
+        return new Game(FFI.global_getCurrentGamePointer());
     }
 
     public static getConfig() {
-        return new C2.Config(C2.FFI.global_getConfigPointer());
+        return new Config(FFI.global_getConfigPointer());
     }
 
     public static getGlobal00B584D0() {
-        return new C2.Global00B584D0(C2.FFI.global_getUnknown_00B584D0());
+        return new Global00B584D0(FFI.global_getUnknown_00B584D0());
     }
     
     public static getRenderer() {
-        return new C2.Renderer(C2.FFI.global_getRenderer());
+        return new Renderer(FFI.global_getRenderer());
     }
 
     public static getActorList() {
@@ -33,25 +35,25 @@ class c2 {
         class Container {
             public selfPointer: NativePointer;
 
-            @native(0x00, 'uint8', true)
+            @property(0x00, UINT8, true)
             public prop00: number;
 
-            @native(0x02, 'uint8', true)
+            @property(0x02, UINT8, true)
             public prop02: number;
 
-            @native(0x03, 'uint8', true)
+            @property(0x03, UINT8, true)
             public prop03: number;
 
-            @native(0x04, 'uint8', true)
+            @property(0x04, UINT8, true)
             public prop04: number;
 
-            @native(0x09, 'uint8', true)
+            @property(0x09, UINT8, true)
             public isEmpty: boolean;
 
-            @native(0x10, 'pointer', true)
+            @property(0x10, POINTER, true)
             public firstPointer: NativePointer;
 
-            @native(0x0C, 'pointer', true)
+            @property(0x0C, POINTER, true)
             public lastPointer: NativePointer;
 
             constructor(address) {
@@ -72,15 +74,15 @@ class c2 {
         }
 
         var container = new Container(NULL);
-        C2.FFI.initializeActorLinkedListContainer(container.selfPointer);
+        FFI.initializeActorLinkedListContainer(container.selfPointer);
 
-        var param = C2.FFI.getParameterForGetActorList();
-        C2.FFI.getActorList(container.selfPointer, param, 1);
+        var param = FFI.getParameterForGetActorList();
+        FFI.getActorList(container.selfPointer, param, 1);
 
         if (!container.isEmpty) {
             var currentItem = new LinkedListItem(container.firstPointer);
             while (!currentItem.selfPointer.equals(container.lastPointer)) {
-                var actor = new C2.Actor(currentItem.actorPointer);
+                var actor = new Actor(currentItem.actorPointer);
                 actors.push(actor);
                 currentItem = new LinkedListItem(currentItem.nextPointer);
             }

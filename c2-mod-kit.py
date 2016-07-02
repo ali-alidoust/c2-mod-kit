@@ -1,7 +1,7 @@
 def main():
     import frida.repl
     import sys
-    sys.argv = ['c2-mod-kit', '-f' ,'./comm2.exe', '-l', './c2-mod-kit.js']
+    sys.argv = ['c2-mod-kit', '-f' ,'./comm2.exe', '-l', './c2-mod-kit.js', '--no-pause']
     frida.repl.main()
 
 if __name__ == '__main__':

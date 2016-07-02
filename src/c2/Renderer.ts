@@ -1,9 +1,8 @@
-/// <reference path="../common/NativeUtils.ts" />
-/// <reference path="../common/NativeObject.ts" />
+import { property } from '../../lib/spectre/NativeDecorations'; 
+import { NativeObject } from '../../lib/spectre/NativeObject';
+import { FLOAT } from '../../lib/spectre/Primitives';
 
-module C2 {
-    export class Renderer extends NativeObject {
-        @native(0x4C, 'float', true)
-        updateRate: number;
-    }
+export class Renderer extends NativeObject {
+    @property(0x4C, FLOAT, true)
+    updateRate: number;
 }
