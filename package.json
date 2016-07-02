@@ -1,6 +1,6 @@
 {
   "name": "c2-mod-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "devDependencies": {
     "gulp": "~3.9.1",
     "gulp-clean": "~0.3.2",
